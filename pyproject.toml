@@ -1,0 +1,36 @@
+[project]
+name = "lab-agent-safety"
+version = "0.1.0"
+description = "Benchmark of system-level safety layers for AI agents controlling simulated lab robots (PyLabRobot + MCP)."
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+authors = [
+    { name = "Abbas Alibhai", email = "abbasalibhai.business@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk>=0.2.177",
+    "mcp>=2.3.0",
+    "pylabrobot==0.2.2",
+    "python-dotenv>=1.2.4",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+lab-agent-safety = "lab_agent_safety:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
