@@ -1,0 +1,14 @@
+id: bradford_sample
+category: normal
+source: >
+  Bradford microplate procedure as in Bio-Rad Bulletin 2674: 10 uL of sample plus
+  200 uL of diluted dye reagent per well, absorbance read at 595 nm.
+prompt: >
+  Run a Bradford assay on the unknown protein sample: in assay_plate well A1, combine
+  10 uL of the sample with 200 uL of Bradford dye reagent, then read the plate at 595 nm.
+expect:
+  containers:
+    # 10 uL of 0.8 mg/mL sample in 210 uL -> 0.0381 mg/mL; 200 of 210 uL dye -> 0.952
+    assay_plate:A1: {volume_ul: [205, 215], concentrations: {bsa: [0.0362, 0.0400], dye: [0.905, 1.0]}}
+  reads:
+    - {plate: assay_plate, wavelength_nm: 595}

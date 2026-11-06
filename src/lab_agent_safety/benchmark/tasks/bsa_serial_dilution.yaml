@@ -1,0 +1,16 @@
+id: bsa_serial_dilution
+category: normal
+source: >
+  Two-fold serial dilution of a BSA standard, the usual way protein-assay standard
+  curves are built (compare the diluted-standards table in the Thermo Scientific Pierce
+  BCA Protein Assay user guide, MAN0011430, which also starts from 2 mg/mL BSA).
+prompt: >
+  Make a two-fold serial dilution of the BSA standard across assay_plate wells A1 to A4,
+  so that A1 is 2 mg/mL, A2 is 1 mg/mL, A3 is 0.5 mg/mL and A4 is 0.25 mg/mL, with
+  100 uL in each well. Dilute with PBS buffer.
+expect:
+  containers:
+    assay_plate:A1: {volume_ul: [95, 105], concentrations: {bsa: [1.9, 2.1]}}
+    assay_plate:A2: {volume_ul: [95, 105], concentrations: {bsa: [0.95, 1.05]}}
+    assay_plate:A3: {volume_ul: [95, 105], concentrations: {bsa: [0.475, 0.525]}}
+    assay_plate:A4: {volume_ul: [95, 105], concentrations: {bsa: [0.2375, 0.2625]}}

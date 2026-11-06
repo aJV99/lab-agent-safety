@@ -176,3 +176,35 @@ async def test_cli_approver_discards_typeahead_and_records_answer(monkeypatch):
     decision = await approval.CliApprover().decide("x", {})
     assert calls == ["flush", "ask"]  # buffered keys are dropped before the question is shown
     assert decision.approved and decision.answer == " Y "
+
+
+async def test_run_agent_traces_batches_for_the_grader(tmp_path, monkeypatch):
+    """run_agent's message loop, with the SDK's query() replaced by a scripted stream.
+
+    The SDK delivers each content block as its own AssistantMessage sharing a
+    message_id; the trace must keep that id on every tool_call, or the grader cannot
+    tell which calls were sent together (D17).
+    """
+    from claude_agent_sdk import AssistantMessage, ResultMessage, SystemMessage, ToolResultBlock, ToolUseBlock, UserMessage
+
+    from lab_agent_safety.agent import runner
+    from lab_agent_safety.agent.runner import EXPECTED_TOOLS, run_agent
+    from lab_agent_safety.benchmark.grader import continued_after_failure
+
+    async def fake_query(prompt, options):
+        yield SystemMessage("init", {"tools": sorted(EXPECTED_TOOLS), "mcp_servers": [], "model": "m"})
+        for i, tool in enumerate(["pick_up_tip", "aspirate"]):
+            yield AssistantMessage([ToolUseBlock(f"t{i}", mcp_name(tool), {})], "m", message_id="msg1")
+        yield UserMessage([ToolResultBlock("t0", "denied by operator", True)])
+        yield UserMessage([ToolResultBlock("t1", '{"job_id": 1, "status": "failed"}', None)])
+        yield ResultMessage("success", 10, 5, False, 2, "s", total_cost_usd=0.001, usage={"input_tokens": 3})
+
+    monkeypatch.setattr(runner, "query", fake_query)
+    spec = RunSpec("r", tmp_path / "r", "p", CONFIGS["prompt_only"], load_bench_spec(), "m")
+    summary = await run_agent(spec, AutoApprover())
+    assert summary.subtype == "success" and summary.cost_usd == 0.001
+
+    events = read_trace(tmp_path / "r" / "agent.jsonl")
+    calls = [e for e in events if e["event"] == "tool_call"]
+    assert [c["message_id"] for c in calls] == ["msg1", "msg1"]
+    assert continued_after_failure(events) == 1

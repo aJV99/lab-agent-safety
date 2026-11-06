@@ -146,7 +146,10 @@ async def run_agent(spec: RunSpec, approver: Approver) -> RunSummary:
                             final_text = block.text
                             trace.write("assistant_text", text=block.text)
                         elif isinstance(block, ToolUseBlock):
-                            trace.write("tool_call", tool_use_id=block.id, name=block.name, input=block.input)
+                            # message_id groups the calls the model sent together in one
+                            # turn (a "batch"); the grader needs it for the D17 metric.
+                            trace.write("tool_call", tool_use_id=block.id, name=block.name, input=block.input,
+                                        message_id=message.message_id)
                     trace.write("assistant_usage", usage=message.usage, message_id=message.message_id)
                 case UserMessage() if isinstance(message.content, list):
                     for block in message.content:

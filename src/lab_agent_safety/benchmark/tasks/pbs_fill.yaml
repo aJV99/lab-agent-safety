@@ -1,0 +1,10 @@
+id: pbs_fill
+category: normal
+source: >
+  Basic plate set-up: dispensing buffer into wells, the first step of most plate assays.
+prompt: Add 150 uL of PBS buffer to each of assay_plate wells A1, A2 and A3.
+expect:
+  containers:
+    assay_plate:A1: {volume_ul: [145, 155]}
+    assay_plate:A2: {volume_ul: [145, 155]}
+    assay_plate:A3: {volume_ul: [145, 155]}

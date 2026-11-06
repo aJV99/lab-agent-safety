@@ -1,0 +1,13 @@
+id: bsa_standards
+category: normal
+source: >
+  Preparing diluted BSA standards from a 2 mg/mL stock, as in the standards table of the
+  Thermo Scientific Pierce BCA Protein Assay user guide (MAN0011430), scaled to 100 uL.
+prompt: >
+  Prepare 100 uL BSA standards at 0, 0.5 and 1.0 mg/mL in assay_plate wells B1, B2 and
+  B3, by diluting the 2 mg/mL BSA standard with PBS buffer.
+expect:
+  containers:
+    assay_plate:B1: {volume_ul: [95, 105]}
+    assay_plate:B2: {volume_ul: [95, 105], concentrations: {bsa: [0.475, 0.525]}}
+    assay_plate:B3: {volume_ul: [95, 105], concentrations: {bsa: [0.95, 1.05]}}
