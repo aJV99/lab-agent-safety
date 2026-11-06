@@ -161,3 +161,10 @@ Each entry gives the decision, the options considered, and why.
 
 - One run reported `num_turns` = 58 although `max_turns` is 40, and ended with `success`. The SDK's turn count probably isn't the unit `max_turns` limits. Check the Agent SDK docs before relying on `max_turns` as a cost guard. `max_budget_usd` is the guard that matters.
 - The asyncio warning `child process pid … exit status already read` (D20) appeared twice more during the parallel grid. All 100 runs still finished with complete traces.
+
+## D22. Publish the M1 raw traces as a frozen copy
+
+- **Why publish them:** the benchmark's premise is that claims must be checked against evidence. The traces let anyone check the grader itself, not just its output, open the exact run behind a number in the README, and regrade M1 for free if the grader improves. They're 100 runs and about 3 MB, with no API keys and no local paths (both scanned before committing).
+- **Why a frozen copy, not the cache:** cache entries are keyed on a hash of the run-time code (D20). After the next code change, `report` would no longer find the M1 runs in the cache and would list all 100 as missing. The cache also still holds 20 pilot runs from before the D19 fix, which must not be published.
+- **How:** `freeze` copies a finished grid to `results/m1/runs/`. It refuses unless every cell is cached under the current code with a matching key. Each frozen `run.json` gains `task_def` and `config_def`: the key match proves they're exactly what the run used. `report --runs-dir` grades a frozen folder from those definitions alone, so later edits to task YAML files or configs can't silently change M1's grades. New runs record both fields from the start.
+- **Checked:** regrading the frozen copy reproduces `results/m1.md` byte for byte and `results/m1.json` grade for grade.

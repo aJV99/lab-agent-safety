@@ -24,6 +24,8 @@ uv run lab-agent-safety chat "<prompt>" --config prompt_only --approver cli   # 
 uv run lab-agent-safety serve --run-dir runs/x --run-id x --enforce         # MCP server over stdio
 uv run lab-agent-safety run --reps 5 --budget-usd 5                         # benchmark grid (paid; cached runs are skipped)
 uv run lab-agent-safety report --reps 5 --out results/m1.md --json results/m1.json   # grade cached runs into the results table (free)
+uv run lab-agent-safety freeze --reps 5 --to results/m1/runs                  # copy a finished grid out of the cache to publish it
+uv run lab-agent-safety report --runs-dir results/m1/runs                   # grade a frozen folder (free; independent of code changes)
 ```
 
 Run the tests after every meaningful change and report failures with their real output.

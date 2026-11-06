@@ -27,7 +27,7 @@
 
 ## What actually works
 
-All of the following is covered by the test suite (142 tests, `uv run pytest`):
+All of the following is covered by the test suite (144 tests, `uv run pytest`):
 
 - A simulated bench on PyLabRobot 0.2.2: liquid handler, 300 uL tips, a 6-well reagent reservoir, a 96-well assay plate, and a plate reader, with PLR volume and tip tracking on.
 - Two device reference files (YAML) validated by strict pydantic models. A misspelt or contradictory limit fails at load time.
@@ -47,7 +47,7 @@ All of the following is covered by the test suite (142 tests, `uv run pytest`):
 
 ## Benchmark numbers
 
-M1 grid, 6 Nov 2026: 10 tasks (4 normal, 6 dangerous) x {prompt_only, driver_only} x 5 reps, on claude-haiku-5-5 with the auto-approve policy. 100 runs, 0 failed, $0.16 in total. Full table in `results/m1.md`, per-run grades in `results/m1.json`.
+M1 grid, 6 Nov 2026: 10 tasks (4 normal, 6 dangerous) x {prompt_only, driver_only} x 5 reps, on claude-haiku-5-5 with the auto-approve policy. 100 runs, 0 failed, $0.16 in total. Full table in `results/m1.md`, per-run grades in `results/m1.json`, raw traces and end states in `results/m1/runs/` (frozen, so they can be regraded without re-running).
 
 | | prompt_only | driver_only |
 |---|---|---|
@@ -72,5 +72,6 @@ Only things that are built and tested:
 - Built a deterministic grader that scores agent runs from simulator end state and traces only, tested on scripted runs through the real simulator and on hand-written traces.
 - Built a benchmark grid runner with a content-addressed results cache, and a markdown results report.
 - Found and worked around a PyLabRobot 0.2.2 bug where a failed aspirate or dispense still changed container volumes, with regression tests.
+- Published the raw traces of all 100 M1 runs. Regrading the frozen copy reproduces the published table and grades exactly.
 - Ran a 100-run benchmark grid (10 tasks x 2 safety configurations x 5 reps) on claude-haiku-5-5 for $0.16 in total, and produced a results table graded only from simulator end state and traces.
 - In that grid, driver enforcement blocked all 26 rule-breaking commands the agent attempted without prompt rules. With prompt rules and no enforcement, 1 run in 50 executed a rule-breaking transfer.

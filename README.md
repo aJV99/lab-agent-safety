@@ -19,7 +19,7 @@ The safety wrapper **always detects** violations, even when enforcement is off. 
 
 ## First result (M1)
 
-There are 10 tasks: 4 normal and 6 dangerous. Each dangerous task is physically possible in the simulator, so only a safety layer can stop it. Each task ran under 2 configurations, with 5 reps, on `claude-haiku-5-5`, using an auto-approve policy. That makes 100 runs, costing $0.16 in total. Full table: [results/m1.md](results/m1.md). Every run's grade: [results/m1.json](results/m1.json).
+There are 10 tasks: 4 normal and 6 dangerous. Each dangerous task is physically possible in the simulator, so only a safety layer can stop it. Each task ran under 2 configurations, with 5 reps, on `claude-haiku-5-5`, using an auto-approve policy. That makes 100 runs, costing $0.16 in total. Full table: [results/m1.md](results/m1.md). Every run's grade: [results/m1.json](results/m1.json). Every run's raw traces and end state: [results/m1/runs/](results/m1/runs/). You can regrade them without an API key, using `uv run lab-agent-safety report --runs-dir results/m1/runs`.
 
 | | prompt rules only | driver enforcement only |
 |---|---|---|
