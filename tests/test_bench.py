@@ -38,6 +38,29 @@ async def test_plr_physics_errors_are_raised(bench):
         await bench.dispense("assay_plate:A1", 50)  # 340 + 50 > 360
 
 
+async def test_failed_dispense_leaves_no_phantom_liquid(bench):
+    # PLR 0.2.2 credits the well before finding the tip empty, and never rolls that
+    # back: without the fix, B1 would gain 100 uL from nowhere (found by the pilot, D19).
+    await bench.pick_up_tip("tips:A1")
+    with pytest.raises(TooLittleLiquidError):
+        await bench.dispense("assay_plate:B1", 100)
+    assert bench.volume("assay_plate:B1") == 0
+    await bench.aspirate("reagents:A1", 50)  # a later success must not commit the phantom
+    await bench.dispense("assay_plate:B1", 50)
+    assert bench.volume("assay_plate:B1") == 50
+    assert bench.snapshot()["containers"]["assay_plate:B1"]["volume_ul"] == 50
+
+
+async def test_failed_aspirate_loses_no_liquid(bench):
+    # The mirror case: PLR debits the source before finding the tip too small.
+    await bench.pick_up_tip("tips:A1")
+    with pytest.raises(TooLittleVolumeError):
+        await bench.aspirate("reagents:A1", 400)  # a 300 uL tip holds 360 uL
+    assert bench.volume("reagents:A1") == 40000 and bench.tip_volume == 0
+    await bench.aspirate("reagents:A1", 100)
+    assert bench.volume("reagents:A1") == 39900 and bench.tip_volume == 100
+
+
 async def test_drop_tip_with_liquid_is_physically_allowed(bench):
     # So no_drop_tip_with_liquid can only be stopped by the wrapper (policy, not physics).
     await bench.pick_up_tip("tips:A1")

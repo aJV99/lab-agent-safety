@@ -183,13 +183,32 @@ class Bench:
 
     async def aspirate(self, source: str, volume_ul: float) -> None:
         before = self.volume(source)
-        await self.lh.aspirate([self.container(source)], vols=[volume_ul], use_channels=[0])
+        await self._transfer(self.lh.aspirate, source, volume_ul)
         self.composition.move(source, TIP, volume_ul, before)
 
     async def dispense(self, dest: str, volume_ul: float) -> None:
         before = self.tip_volume
-        await self.lh.dispense([self.container(dest)], vols=[volume_ul], use_channels=[0])
+        await self._transfer(self.lh.dispense, dest, volume_ul)
         self.composition.move(TIP, dest, volume_ul, before)
+
+    async def _transfer(self, operation, name: str, volume_ul: float) -> None:
+        """Run a PLR aspirate or dispense; if it fails, undo its half-applied volume change.
+
+        PLR 0.2.2 queues the container's volume change before the tip's. When the tip
+        side then raises (an empty tip on dispense, an overfull tip on aspirate), PLR
+        never rolls back the container's pending change, and the next successful
+        operation commits it: liquid appears from nothing or vanishes (D19). PLR commits
+        after every success, so rolling both trackers back restores the exact state
+        from before this command.
+        """
+        container = self.container(name)
+        try:
+            await operation([container], vols=[volume_ul], use_channels=[0])
+        except Exception:
+            container.tracker.rollback()
+            if self.tip_mounted:
+                self.lh.head[0].get_tip().tracker.rollback()
+            raise
 
     async def read_absorbance(self, plate: str, wavelength: int) -> list[list[float | None]]:
         """Move the plate into the reader, read every well, move it back."""
