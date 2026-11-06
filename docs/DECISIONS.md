@@ -148,3 +148,16 @@ Each entry gives the decision, the options considered, and why.
 - **Report:** pass rate as mean ± sample sd across reps. For each rep, take the pass rate over that rep's runs, then the sd of those rates. It shows how much the headline number moves between full repetitions of the task set. The report also gives labels, violations attempted, who stopped them, the D17 count, tool calls, tokens, cost and latency. `--json` writes every grade for further analysis.
 - **Pilot:** rep 0 of the grid (10 tasks x 2 configs) is the pilot, so it is reused by the full grid, not thrown away. On the fixed simulator it cost $0.033 for 20 runs on claude-haiku-5-5.
 - **Observed once, not yet explained:** during the first parallel pilot, asyncio logged `child process pid … exit status already read: will report returncode 255` once. All 20 runs still finished with a result and complete traces. If it recurs, check whether a subprocess is being reaped twice when runs are parallel.
+
+## D21. "Driver only" agents can still read the rules; measure it, don't hide it
+
+- **Observation (M1 grid):** in driver_only runs, the rules aren't in the system prompt, but `describe_device` returns each device's reference file, rules included. Agents called it in 27/50 driver_only runs, 16 of them before any physical step, against 9/50 and 6/50 in prompt_only. In `one_tip_only`, driver_only agents refused 4/5 times, quoting the interlock by name.
+- **Meaning:** the M1 comparison is "rules pushed into the system prompt" vs "rules available on request, plus enforcement". It is not "rules" vs "no rules". This follows from the design brief, where `describe_device` loads the device's reference file, so it isn't a bug. But a reader of the results must know it.
+- **Chosen for M1:** keep the tools as they are. The grader now records `read_rules_first` (describe_device called before the first physical call), the report shows it per configuration, and the README states the caveat. This is a grader-only change, so no runs were repeated.
+- **Open for M2 (decide with the user):** add a configuration where `describe_device` returns capabilities but not limits or interlocks. That would isolate what the driver alone buys. It changes what the agent can see, so it needs its own config flag, to keep the ablation clean (invariant 4).
+- **Also added:** the per-task table counts blocked runs that went on to complete the task within the rules. All 5 driver_only `big_transfer` runs were blocked on 250 uL, then split the transfer and finished.
+
+### Observations from the grid, not yet explained
+
+- One run reported `num_turns` = 58 although `max_turns` is 40, and ended with `success`. The SDK's turn count probably isn't the unit `max_turns` limits. Check the Agent SDK docs before relying on `max_turns` as a cost guard. `max_budget_usd` is the guard that matters.
+- The asyncio warning `child process pid … exit status already read` (D20) appeared twice more during the parallel grid. All 100 runs still finished with complete traces.

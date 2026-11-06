@@ -4,7 +4,7 @@
 
 | Milestone | Target | Status |
 |---|---|---|
-| M1: first real result | 16 Nov 2026 | In progress (step 10: runner and report built; full grid next) |
+| M1: first real result | 16 Nov 2026 | Done (6 Nov 2026) |
 | M2: full benchmark | 30 Nov 2026 | Not started |
 | M3: any MCP server, write-up | n/a | Not started |
 
@@ -23,11 +23,11 @@
 - [x] 10 tasks (4 normal, 6 dangerous) and the deterministic grader, including the D17 batch-continuation metric (D18)
 - [x] Grid runner with a results cache, and the results report (D20)
 - [x] Pilot (rep 0 of the grid, 20 runs, $0.033). It found and fixed a PyLabRobot volume-tracking bug on failed transfers (D19)
-- [ ] First results table: prompt only vs driver only, 5 reps
+- [x] First results table: prompt only vs driver only, 10 tasks x 5 reps, 100 runs, $0.16 ([results/m1.md](../results/m1.md))
 
 ## What actually works
 
-All of the following is covered by the test suite (140 tests, `uv run pytest`):
+All of the following is covered by the test suite (142 tests, `uv run pytest`):
 
 - A simulated bench on PyLabRobot 0.2.2: liquid handler, 300 uL tips, a 6-well reagent reservoir, a 96-well assay plate, and a plate reader, with PLR volume and tip tracking on.
 - Two device reference files (YAML) validated by strict pydantic models. A misspelt or contradictory limit fails at load time.
@@ -47,7 +47,19 @@ All of the following is covered by the test suite (140 tests, `uv run pytest`):
 
 ## Benchmark numbers
 
-None yet. Only a one-rep pilot has run so far, which is too few for pass rates. The full grid is next.
+M1 grid, 6 Nov 2026: 10 tasks (4 normal, 6 dangerous) x {prompt_only, driver_only} x 5 reps, on claude-haiku-5-5 with the auto-approve policy. 100 runs, 0 failed, $0.16 in total. Full table in `results/m1.md`, per-run grades in `results/m1.json`.
+
+| | prompt_only | driver_only |
+|---|---|---|
+| Normal tasks passed | 95% ± 11% (19/20) | 90% ± 14% (18/20) |
+| Dangerous tasks kept safe | 97% ± 7% (29/30) | 100% (30/30) |
+| Runs with a violation attempted | 1/50 | 15/50 |
+| Violating commands: driver / device / nothing stopped them | 0 / 0 / 2 | 26 / 0 / 0 |
+| Runs that continued a batch after a failed step (D17) | 0/50 | 13/50 |
+| Runs that read the device rules before acting (D21) | 6/50 | 16/50 |
+| Mean cost per run (USD) | 0.0014 | 0.0018 |
+
+± is the sample sd across reps. These are counts from 50 runs per configuration on one model, not tested effects.
 
 ## Verified facts
 
@@ -60,3 +72,5 @@ Only things that are built and tested:
 - Built a deterministic grader that scores agent runs from simulator end state and traces only, tested on scripted runs through the real simulator and on hand-written traces.
 - Built a benchmark grid runner with a content-addressed results cache, and a markdown results report.
 - Found and worked around a PyLabRobot 0.2.2 bug where a failed aspirate or dispense still changed container volumes, with regression tests.
+- Ran a 100-run benchmark grid (10 tasks x 2 safety configurations x 5 reps) on claude-haiku-5-5 for $0.16 in total, and produced a results table graded only from simulator end state and traces.
+- In that grid, driver enforcement blocked all 26 rule-breaking commands the agent attempted without prompt rules. With prompt rules and no enforcement, 1 run in 50 executed a rule-breaking transfer.

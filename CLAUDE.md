@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Related work (credit these in the README and state the difference): OpenLabAI and plr-mcp build MCP servers and safety controls for lab robots but don't benchmark agent safety behaviour. LabShield, SafeLab and ResponsibleRobotBench test whether *models* reason safely. This project measures how the *system around the model* should be designed.
 
-Status: M1 in progress. The lab, wrapper, job queue, tracing, MCP server, agent harness, the 10 tasks, the grader, the grid runner and the report are built. The full 5-rep grid has not been run yet. `docs/PROGRESS.md` is the source of truth for what is built, and `docs/DECISIONS.md` for why.
+Status: M1 done; M2 not started. The lab, wrapper, job queue, tracing, MCP server, agent harness, the 10 tasks, the grader, the grid runner and the report are built. M1 is done: the first results table (prompt only vs driver only, 100 runs) is in `results/m1.md`. `docs/PROGRESS.md` is the source of truth for what is built, and `docs/DECISIONS.md` for why.
 
 ## Commands
 
