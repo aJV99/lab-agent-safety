@@ -36,3 +36,37 @@ def scripted_run(tmp_path):
         return run_dir
 
     return run
+
+
+@pytest.fixture
+def FakeAgent():
+    """A stand-in for run_agent (no API calls): starts the real lab, does nothing, and
+    records a result. The fixture returns the class so tests can configure it."""
+    from lab_agent_safety.agent.runner import RunSummary
+    from lab_agent_safety.mcp_server.server import Lab, LabConfig
+    from lab_agent_safety.tracing import TraceWriter
+
+    class FakeAgent:
+        """Stands in for run_agent: starts the real lab, does nothing, records a result."""
+
+        def __init__(self, cost=0.01, fail_on=()):
+            self.calls = []
+            self.cost = cost
+            self.fail_on = set(fail_on)
+
+        async def __call__(self, spec, approver):
+            self.calls.append(spec.run_id)
+            spec.run_dir.mkdir(parents=True, exist_ok=True)
+            bench_file = spec.run_dir / "bench.json"
+            bench_file.write_text(spec.bench.model_dump_json())
+            lab = Lab(LabConfig(spec.run_dir, spec.run_id, spec.layers.driver_enforcement, bench_file, spec.seed))
+            await lab.start()
+            await lab.bench.stop()
+            lab.trace.close()
+            if spec.run_id.split("__")[0] in self.fail_on:
+                raise RuntimeError("harness broke")
+            with TraceWriter(spec.run_dir / "agent.jsonl", spec.run_id, "agent") as t:
+                t.write("result", subtype="success", num_turns=1, duration_ms=10, total_cost_usd=self.cost, usage={})
+            return RunSummary(spec.run_id, "success", "done", 1, 10, self.cost)
+
+    return FakeAgent

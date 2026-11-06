@@ -2,10 +2,13 @@
 
     serve   run the lab MCP server over stdio (normally the agent harness launches it)
     chat    run the agent once on a prompt, with a person approving physical actions
+    run     run the benchmark grid (tasks x configs x reps), skipping cached runs
+    report  grade the cached runs of a grid and print or write the results table
 """
 
 import argparse
 import asyncio
+import json
 import sys
 import time
 from pathlib import Path
@@ -55,6 +58,62 @@ def _chat(args: argparse.Namespace) -> None:
     print(f"Trace and end state: {spec.run_dir}")
 
 
+def _grid(args: argparse.Namespace):
+    from lab_agent_safety.benchmark.run import make_grid
+    from lab_agent_safety.benchmark.tasks import load_tasks
+
+    tasks = load_tasks()
+    task_ids = list(tasks) if args.tasks == "all" else args.tasks.split(",")
+    config_names = args.configs.split(",")
+    for name in task_ids:
+        if name not in tasks:
+            sys.exit(f"unknown task {name!r}; known: {', '.join(tasks)}")
+    for name in config_names:
+        if name not in CONFIGS:
+            sys.exit(f"unknown config {name!r}; known: {', '.join(CONFIGS)}")
+    return make_grid([tasks[t] for t in task_ids], [CONFIGS[c] for c in config_names], args.model, args.reps)
+
+
+def _run(args: argparse.Namespace) -> None:
+    from lab_agent_safety.benchmark.run import run_grid
+
+    cells = _grid(args)
+    results = asyncio.run(run_grid(cells, Path(args.cache_dir), args.parallel, args.budget_usd))
+    counts = {s: sum(r.status == s for r in results) for s in ("cached", "ran", "failed", "skipped")}
+    spent = sum(r.cost_usd for r in results if r.status == "ran")
+    print(f"\n{len(cells)} runs: {counts['ran']} ran (${spent:.4f}), {counts['cached']} cached, "
+          f"{counts['failed']} failed, {counts['skipped']} skipped (budget)")
+    if counts["failed"]:
+        sys.exit(1)
+
+
+def _report(args: argparse.Namespace) -> None:
+    from lab_agent_safety.benchmark.report import collect, render
+
+    rows, missing = collect(_grid(args), Path(args.cache_dir))
+    text = render(rows, missing, args.title)
+    if args.out:
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(text)
+        print(f"wrote {args.out}")
+    else:
+        print(text)
+    if args.json:
+        records = [{"task": r.cell.task.id, "config": r.cell.config.name, "model": r.cell.model,
+                    "rep": r.cell.rep, **r.grade.to_dict()} for r in rows]
+        Path(args.json).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.json).write_text(json.dumps(records, indent=2))
+        print(f"wrote {args.json}")
+
+
+def _add_grid_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--tasks", default="all", help="comma-separated task ids, or 'all'")
+    p.add_argument("--configs", default="prompt_only,driver_only", help="comma-separated config names")
+    p.add_argument("--model", default=DEFAULT_MODEL)
+    p.add_argument("--reps", type=int, default=5)
+    p.add_argument("--cache-dir", default="results/cache")
+
+
 def main(argv: list[str] | None = None) -> None:
     load_env()
     parser = argparse.ArgumentParser(prog="lab-agent-safety")
@@ -70,11 +129,27 @@ def main(argv: list[str] | None = None) -> None:
     chat.add_argument("--runs-dir", default="runs")
     chat.add_argument("--run-id")
 
+    run = sub.add_parser("run", help="run the benchmark grid, skipping cached runs")
+    _add_grid_args(run)
+    run.add_argument("--parallel", type=int, default=4, help="runs in flight at once")
+    run.add_argument("--budget-usd", type=float, default=5.0,
+                     help="stop launching runs once this much has been spent (in-flight runs finish)")
+
+    report = sub.add_parser("report", help="grade the cached runs of a grid and print the results table")
+    _add_grid_args(report)
+    report.add_argument("--title", default="Results")
+    report.add_argument("--out", help="write the markdown table here instead of printing it")
+    report.add_argument("--json", help="also write every run's grade as JSON here")
+
     args, rest = parser.parse_known_args(argv)
     if args.command == "serve":
         from lab_agent_safety.mcp_server.server import main as serve_main
         serve_main(rest)
     elif rest:
         parser.error(f"unrecognised arguments: {' '.join(rest)}")
-    else:
+    elif args.command == "chat":
         _chat(args)
+    elif args.command == "run":
+        _run(args)
+    else:
+        _report(args)
