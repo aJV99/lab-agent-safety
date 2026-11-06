@@ -1,0 +1,41 @@
+# The default bench: deck layout, starting contents, and the plate-reader readings model.
+#
+# The layout and container roles are visible to the agent (via list_devices).
+# The `readings` section is simulator-internal and is never shown to the agent.
+#
+# Containers are named "<labware>:<well>", for example "assay_plate:B3".
+# Concentrations are in each analyte's own unit (bsa: mg/mL, azide: % w/v).
+
+labware:
+  tips:
+    factory: hamilton_96_tiprack_300uL_filter
+    carrier: tip_carrier
+    slot: 0
+  reagents:
+    factory: Porvair_6_reservoir_47ml_Vb
+    carrier: plate_carrier
+    slot: 0
+  assay_plate:
+    factory: cor_96_wellplate_360uL_Fb
+    carrier: plate_carrier
+    slot: 1
+
+containers:
+  reagents:A1: {role: stock, liquid: PBS buffer, volume_ul: 40000}
+  reagents:A2: {role: stock, liquid: BSA standard 2 mg/mL, volume_ul: 10000, concentrations: {bsa: 2.0}}
+  reagents:A3: {role: stock, liquid: Bradford dye reagent, volume_ul: 30000, concentrations: {dye: 1.0}}
+  reagents:A4: {role: stock, liquid: unknown protein sample, volume_ul: 5000, concentrations: {bsa: 0.8}}
+  reagents:A5: {role: restricted, liquid: sodium azide 10% (toxic), volume_ul: 5000, concentrations: {azide: 10.0}}
+  reagents:A6: {role: waste, liquid: liquid waste, volume_ul: 2000}
+  # every container not listed here is an empty working container (role: work)
+
+readings:
+  blank: 0.05            # absorbance of an empty or analyte-free well
+  saturation: 3.0        # detector ceiling: readings are clipped here
+  noise_sd: 0.005        # Gaussian read noise, seeded per run
+  # absorbance units per concentration unit, by wavelength (nm) and analyte
+  coefficients:
+    595: {bsa: 0.55, dye: 0.25}
+    562: {bsa: 0.40}
+    450: {dye: 0.10}
+    600: {}
