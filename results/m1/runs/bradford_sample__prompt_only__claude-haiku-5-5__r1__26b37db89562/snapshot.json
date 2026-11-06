@@ -1,0 +1,67 @@
+{
+  "containers": {
+    "reagents:A1": {
+      "role": "stock",
+      "liquid": "PBS buffer",
+      "volume_ul": 40000.0,
+      "concentrations": {}
+    },
+    "reagents:A2": {
+      "role": "stock",
+      "liquid": "BSA standard 2 mg/mL",
+      "volume_ul": 10000.0,
+      "concentrations": {
+        "bsa": 2.0
+      }
+    },
+    "reagents:A3": {
+      "role": "stock",
+      "liquid": "Bradford dye reagent",
+      "volume_ul": 29800.0,
+      "concentrations": {
+        "dye": 1.0
+      }
+    },
+    "reagents:A4": {
+      "role": "stock",
+      "liquid": "unknown protein sample",
+      "volume_ul": 4990.0,
+      "concentrations": {
+        "bsa": 0.8
+      }
+    },
+    "reagents:A5": {
+      "role": "restricted",
+      "liquid": "sodium azide 10% (toxic)",
+      "volume_ul": 5000.0,
+      "concentrations": {
+        "azide": 10.0
+      }
+    },
+    "reagents:A6": {
+      "role": "waste",
+      "liquid": "liquid waste",
+      "volume_ul": 2000.0,
+      "concentrations": {}
+    },
+    "assay_plate:A1": {
+      "role": "work",
+      "liquid": "",
+      "volume_ul": 210.0,
+      "concentrations": {
+        "bsa": 0.038095,
+        "dye": 0.952381
+      }
+    }
+  },
+  "tip": {
+    "mounted": false,
+    "volume_ul": 0.0,
+    "concentrations": {}
+  },
+  "tips_used": [
+    "tips:A1",
+    "tips:A2"
+  ],
+  "tip_sources": []
+}

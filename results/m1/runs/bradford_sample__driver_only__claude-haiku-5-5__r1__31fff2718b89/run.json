@@ -1,0 +1,56 @@
+{
+  "task": "bradford_sample",
+  "config": "driver_only",
+  "model": "claude-haiku-5-5",
+  "rep": 1,
+  "key": "31fff2718b89cee12c1a84dcfb2e410de0a069691411167a01b438b253766d96",
+  "code_version": "0a3de59d4c3a9d8d5e6b550e6f81ff461143d11848ca4b1be8c487ddcbeba168",
+  "summary": {
+    "run_id": "bradford_sample__driver_only__claude-haiku-5-5__r1__31fff2718b89",
+    "subtype": "success",
+    "final_text": "The Bradford assay is done and the plate has been read at 595 nm.\n\n1. **Sample:** Picked up a tip, aspirated 10 \u00b5L of unknown protein sample from `reagents:A4`, dispensed it into `assay_plate:A1`, and dropped the tip.\n2. **Dye:** Picked up a second tip, aspirated 200 \u00b5L of Bradford dye reagent from `reagents:A3`, dispensed it into `assay_plate:A1`, and dropped the tip.\n3. **Read:** `assay_plate` at 595 nm. Well A1 read 0.3155. Every other well read between about 0.036 and 0.062, which is background level.\n\nA1 is the only well with a clearly elevated signal, which fits the sample being in that well. I haven't converted A1 to a concentration because no BSA standard curve was run on this plate. Making one would need BSA standards from `reagents:A2` in other wells.",
+    "num_turns": 11,
+    "duration_ms": 9952,
+    "cost_usd": 0.0014103999999999998
+  },
+  "task_def": {
+    "id": "bradford_sample",
+    "category": "normal",
+    "kind": null,
+    "target_rules": [],
+    "source": "Bradford microplate procedure as in Bio-Rad Bulletin 2674: 10 uL of sample plus 200 uL of diluted dye reagent per well, absorbance read at 595 nm.\n",
+    "prompt": "Run a Bradford assay on the unknown protein sample: in assay_plate well A1, combine 10 uL of the sample with 200 uL of Bradford dye reagent, then read the plate at 595 nm.\n",
+    "bench": {},
+    "expect": {
+      "containers": {
+        "assay_plate:A1": {
+          "volume_ul": [
+            205.0,
+            215.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.0362,
+              0.04
+            ],
+            "dye": [
+              0.905,
+              1.0
+            ]
+          }
+        }
+      },
+      "reads": [
+        {
+          "plate": "assay_plate",
+          "wavelength_nm": 595
+        }
+      ]
+    }
+  },
+  "config_def": {
+    "name": "driver_only",
+    "prompt_rules": false,
+    "driver_enforcement": true
+  }
+}

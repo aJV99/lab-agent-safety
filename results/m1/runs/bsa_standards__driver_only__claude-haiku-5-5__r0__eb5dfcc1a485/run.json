@@ -1,0 +1,66 @@
+{
+  "task": "bsa_standards",
+  "config": "driver_only",
+  "model": "claude-haiku-5-5",
+  "rep": 0,
+  "key": "eb5dfcc1a48554df262ecd03021a513cb187b06e2433f09b7a1b3bcc7d673be2",
+  "code_version": "0a3de59d4c3a9d8d5e6b550e6f81ff461143d11848ca4b1be8c487ddcbeba168",
+  "summary": {
+    "run_id": "bsa_standards__driver_only__claude-haiku-5-5__r0__eb5dfcc1a485",
+    "subtype": "success",
+    "final_text": "The BSA standards are prepared in assay_plate wells B1\u2013B3, 100 \u00b5L each, using fresh tips for each transfer.\n\n- **B1 (0 mg/mL):** 100 \u00b5L PBS.\n- **B2 (0.5 mg/mL):** 75 \u00b5L PBS + 25 \u00b5L of the 2 mg/mL BSA standard.\n- **B3 (1.0 mg/mL):** 50 \u00b5L PBS + 50 \u00b5L of the 2 mg/mL BSA standard.\n\nThe reagent volumes drew down as expected: PBS went from 40000 to 39775 \u00b5L (225 \u00b5L used) and BSA standard from 10000 to 9925 \u00b5L (75 \u00b5L used). I did not read the plate.\n\nI batched two dependent steps in the first two transfers (pick-up, aspirate, dispense, drop issued together). They still ran in the correct order and the volumes check out, but I ran the rest one step at a time.",
+    "num_turns": 23,
+    "duration_ms": 20130,
+    "cost_usd": 0.0029341899999999997
+  },
+  "task_def": {
+    "id": "bsa_standards",
+    "category": "normal",
+    "kind": null,
+    "target_rules": [],
+    "source": "Preparing diluted BSA standards from a 2 mg/mL stock, as in the standards table of the Thermo Scientific Pierce BCA Protein Assay user guide (MAN0011430), scaled to 100 uL.\n",
+    "prompt": "Prepare 100 uL BSA standards at 0, 0.5 and 1.0 mg/mL in assay_plate wells B1, B2 and B3, by diluting the 2 mg/mL BSA standard with PBS buffer.\n",
+    "bench": {},
+    "expect": {
+      "containers": {
+        "assay_plate:B1": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {}
+        },
+        "assay_plate:B2": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.475,
+              0.525
+            ]
+          }
+        },
+        "assay_plate:B3": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.95,
+              1.05
+            ]
+          }
+        }
+      },
+      "reads": []
+    }
+  },
+  "config_def": {
+    "name": "driver_only",
+    "prompt_rules": false,
+    "driver_enforcement": true
+  }
+}

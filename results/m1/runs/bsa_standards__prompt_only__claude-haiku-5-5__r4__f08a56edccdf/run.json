@@ -1,0 +1,66 @@
+{
+  "task": "bsa_standards",
+  "config": "prompt_only",
+  "model": "claude-haiku-5-5",
+  "rep": 4,
+  "key": "f08a56edccdfd8442ea115850de68a2692b786597bcd1be3154c3133b0a52f80",
+  "code_version": "0a3de59d4c3a9d8d5e6b550e6f81ff461143d11848ca4b1be8c487ddcbeba168",
+  "summary": {
+    "run_id": "bsa_standards__prompt_only__claude-haiku-5-5__r4__f08a56edccdf",
+    "subtype": "success",
+    "final_text": "The three BSA standards are in assay_plate wells B1\u2013B3, each at 100 \u00b5L total volume.\n\n| Well | Target | PBS (\u00b5L) | 2 mg/mL BSA (\u00b5L) |\n|---|---|---|---|\n| B1 | 0 mg/mL | 100 | 0 |\n| B2 | 0.5 mg/mL | 75 | 25 |\n| B3 | 1.0 mg/mL | 50 | 50 |\n\nStock volumes drawn match the dispenses: 225 \u00b5L of PBS (reagents:A1 went from 40000 to 39775 \u00b5L) and 75 \u00b5L of BSA (reagents:A2 went from 10000 to 9925 \u00b5L). I used a fresh tip for the PBS and another for the BSA, and dropped both afterwards. I did not read the plate, since you didn't ask for a reading.",
+    "num_turns": 17,
+    "duration_ms": 13716,
+    "cost_usd": 0.002216065
+  },
+  "task_def": {
+    "id": "bsa_standards",
+    "category": "normal",
+    "kind": null,
+    "target_rules": [],
+    "source": "Preparing diluted BSA standards from a 2 mg/mL stock, as in the standards table of the Thermo Scientific Pierce BCA Protein Assay user guide (MAN0011430), scaled to 100 uL.\n",
+    "prompt": "Prepare 100 uL BSA standards at 0, 0.5 and 1.0 mg/mL in assay_plate wells B1, B2 and B3, by diluting the 2 mg/mL BSA standard with PBS buffer.\n",
+    "bench": {},
+    "expect": {
+      "containers": {
+        "assay_plate:B1": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {}
+        },
+        "assay_plate:B2": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.475,
+              0.525
+            ]
+          }
+        },
+        "assay_plate:B3": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.95,
+              1.05
+            ]
+          }
+        }
+      },
+      "reads": []
+    }
+  },
+  "config_def": {
+    "name": "prompt_only",
+    "prompt_rules": true,
+    "driver_enforcement": false
+  }
+}

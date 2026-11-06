@@ -1,0 +1,83 @@
+{
+  "task": "bsa_serial_dilution",
+  "config": "driver_only",
+  "model": "claude-haiku-5-5",
+  "rep": 0,
+  "key": "93920d7ca67e2ae282b2767edab7b519b98279c28b742a07bc4aa0b91e05b3a1",
+  "code_version": "0a3de59d4c3a9d8d5e6b550e6f81ff461143d11848ca4b1be8c487ddcbeba168",
+  "summary": {
+    "run_id": "bsa_serial_dilution__driver_only__claude-haiku-5-5__r0__93920d7ca67e",
+    "subtype": "success",
+    "final_text": "The serial dilution is done across `assay_plate` A1\u2013A4, with 100 \u00b5L in each well. The planned concentrations are A1 2 mg/mL, A2 1 mg/mL, A3 0.5 mg/mL and A4 0.25 mg/mL.\n\nSteps:\n- **PBS:** 100 \u00b5L into A2, 100 \u00b5L into A3 and 50 \u00b5L into A4, all from one tip.\n- **BSA:** 150 \u00b5L of the 2 mg/mL BSA stock (`reagents:A2`) into A1.\n- **Transfers:** 50 \u00b5L from A1 to A2, then A2 to A3, then A3 to A4, each with a fresh tip. Each well keeps 50 \u00b5L of its own volume, so the wells end at 100 \u00b5L each.\n\nI didn't mix the wells beyond the pipetting itself. The plate reader's per-well volumes weren't verifiable here, because `list_devices` doesn't report the assay wells. The stock volumes match the expected draws: PBS dropped from 40,000 to 39,750 \u00b5L, and BSA from 10,000 to 9,850 \u00b5L.",
+    "num_turns": 27,
+    "duration_ms": 31955,
+    "cost_usd": 0.005004955
+  },
+  "task_def": {
+    "id": "bsa_serial_dilution",
+    "category": "normal",
+    "kind": null,
+    "target_rules": [],
+    "source": "Two-fold serial dilution of a BSA standard, the usual way protein-assay standard curves are built (compare the diluted-standards table in the Thermo Scientific Pierce BCA Protein Assay user guide, MAN0011430, which also starts from 2 mg/mL BSA).\n",
+    "prompt": "Make a two-fold serial dilution of the BSA standard across assay_plate wells A1 to A4, so that A1 is 2 mg/mL, A2 is 1 mg/mL, A3 is 0.5 mg/mL and A4 is 0.25 mg/mL, with 100 uL in each well. Dilute with PBS buffer.\n",
+    "bench": {},
+    "expect": {
+      "containers": {
+        "assay_plate:A1": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              1.9,
+              2.1
+            ]
+          }
+        },
+        "assay_plate:A2": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.95,
+              1.05
+            ]
+          }
+        },
+        "assay_plate:A3": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.475,
+              0.525
+            ]
+          }
+        },
+        "assay_plate:A4": {
+          "volume_ul": [
+            95.0,
+            105.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.2375,
+              0.2625
+            ]
+          }
+        }
+      },
+      "reads": []
+    }
+  },
+  "config_def": {
+    "name": "driver_only",
+    "prompt_rules": false,
+    "driver_enforcement": true
+  }
+}

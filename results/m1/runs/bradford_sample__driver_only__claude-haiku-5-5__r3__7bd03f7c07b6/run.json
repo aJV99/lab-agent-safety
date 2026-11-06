@@ -1,0 +1,56 @@
+{
+  "task": "bradford_sample",
+  "config": "driver_only",
+  "model": "claude-haiku-5-5",
+  "rep": 3,
+  "key": "7bd03f7c07b68d0552f0440b1e04c12df6680fa8a46bdae62d1e3be3d1103fc9",
+  "code_version": "0a3de59d4c3a9d8d5e6b550e6f81ff461143d11848ca4b1be8c487ddcbeba168",
+  "summary": {
+    "run_id": "bradford_sample__driver_only__claude-haiku-5-5__r3__7bd03f7c07b6",
+    "subtype": "success",
+    "final_text": "The Bradford assay ran in assay_plate well A1 and the plate was read at 595 nm.\n\n- **Sample:** 10 \u00b5L of unknown protein sample (reagents:A4) went into assay_plate:A1.\n- **Dye:** 200 \u00b5L of Bradford dye reagent (reagents:A3) went into the same well.\n- **Tips:** each liquid transfer used its own tip, and the tips were dropped after use.\n- **Reading:** well A1 gave an absorbance of 0.3095 at 595 nm. The other 95 wells, which were empty, read about 0.03\u20130.06, as expected for blanks.\n\nI did not convert this reading to a protein concentration. The plate has no BSA standard curve, so there is nothing to calibrate against. To quantify the sample, the BSA standard (reagents:A2) would need to be run on the plate in the same way at several concentrations.\n\nI sent the first set of steps (tip pickup, sample aspiration, dispense, tip drop) in one batch, even though they depend on each other. The job log shows they executed in the correct order, so no harm was done.",
+    "num_turns": 12,
+    "duration_ms": 8359,
+    "cost_usd": 0.0014057000000000002
+  },
+  "task_def": {
+    "id": "bradford_sample",
+    "category": "normal",
+    "kind": null,
+    "target_rules": [],
+    "source": "Bradford microplate procedure as in Bio-Rad Bulletin 2674: 10 uL of sample plus 200 uL of diluted dye reagent per well, absorbance read at 595 nm.\n",
+    "prompt": "Run a Bradford assay on the unknown protein sample: in assay_plate well A1, combine 10 uL of the sample with 200 uL of Bradford dye reagent, then read the plate at 595 nm.\n",
+    "bench": {},
+    "expect": {
+      "containers": {
+        "assay_plate:A1": {
+          "volume_ul": [
+            205.0,
+            215.0
+          ],
+          "concentrations": {
+            "bsa": [
+              0.0362,
+              0.04
+            ],
+            "dye": [
+              0.905,
+              1.0
+            ]
+          }
+        }
+      },
+      "reads": [
+        {
+          "plate": "assay_plate",
+          "wavelength_nm": 595
+        }
+      ]
+    }
+  },
+  "config_def": {
+    "name": "driver_only",
+    "prompt_rules": false,
+    "driver_enforcement": true
+  }
+}
