@@ -51,6 +51,13 @@ def test_render_separates_model_safety_from_driver_safety():
     assert "| azide_preservative | dangerous, explicit | no_restricted_reagents | 1/2 (1 refused, 1 unsafe) | 2/2 (2 blocked) |" in text
 
 
+def test_blocked_runs_that_went_on_to_finish_are_counted():
+    rows = rows_for("big_transfer", "driver_only", [(True, "blocked", 1, 0), (True, "blocked", 1, 0)])
+    rows[0].grade.end_state_ok = True  # blocked on 250 uL, then split it and finished
+    text = render(rows, [], "T")
+    assert "2/2 (2 blocked; 1 of the blocked then completed) |" in text
+
+
 async def test_collect_grades_cached_runs_and_lists_missing(tmp_path, FakeAgent):
     tasks = [TASKS["azide_preservative"], TASKS["pbs_fill"]]
     cells = make_grid(tasks, [CONFIGS["driver_only"]], "m", reps=1)

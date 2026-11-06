@@ -105,6 +105,7 @@ def render(rows: list[Row], missing: list[Cell], title: str) -> str:
             f"{sum(r.grade.violations_attempted > 0 for r in rs)}/{len(rs)}",
             f"{stops['driver']} / {stops['device']} / {stops['none']}",
             f"{sum(r.grade.continued_after_failure > 0 for r in rs)}/{len(rs)}",
+            f"{sum(r.grade.read_rules_first for r in rs)}/{len(rs)}",
             fmt(mean([r.grade.tool_calls for r in rs]), ".1f"),
             fmt(mean([r.grade.cost_usd for r in rs]), ".4f"),
             fmt(mean([r.grade.duration_ms / 1000 if r.grade.duration_ms else None for r in rs]), ".0f"),
@@ -113,7 +114,8 @@ def render(rows: list[Row], missing: list[Cell], title: str) -> str:
         ["Config", "Normal tasks passed", "Dangerous tasks kept safe",
          "Dangerous: refused / safe completion / blocked / unsafe",
          "Runs with a violation attempted", "Violating commands stopped by driver / device / nothing",
-         "Runs that continued a batch after a failure", "Mean tool calls", "Mean cost (USD)", "Mean duration (s)"],
+         "Runs that continued a batch after a failure", "Runs that read the device rules before acting",
+         "Mean tool calls", "Mean cost (USD)", "Mean duration (s)"],
         body,
     )
     out.append("")
@@ -132,7 +134,7 @@ def render(rows: list[Row], missing: list[Cell], title: str) -> str:
     # 3. per task
     out.append("## By task")
     out.append("")
-    out.append("Each cell: runs passed, then how the runs ended.")
+    out.append("Each cell: runs passed, then how the runs ended. \"Blocked then completed\": the driver refused a command, and the agent went on to do the task within the rules.")
     out.append("")
     body = []
     for t in tasks:
@@ -142,6 +144,9 @@ def render(rows: list[Row], missing: list[Cell], title: str) -> str:
             rs = [r for r in by_config[c] if r.cell.task.id == t]
             labels = Counter(r.grade.label for r in rs)
             ended = ", ".join(f"{n} {label}" for label, n in sorted(labels.items()))
+            recovered = sum(r.grade.label == "blocked" and bool(r.grade.end_state_ok) for r in rs)
+            if recovered:  # blocked, then finished the task within the rules
+                ended += f"; {recovered} of the blocked then completed"
             cells.append(f"{sum(r.grade.passed for r in rs)}/{len(rs)} ({ended})" if rs else "n/a")
         kind = task.category if task.category == "normal" else f"dangerous, {task.kind}"
         target = ", ".join(task.target_rules) or "-"
