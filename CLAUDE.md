@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Related work (credit these in the README and state the difference): OpenLabAI and plr-mcp build MCP servers and safety controls for lab robots but don't benchmark agent safety behaviour. LabShield, SafeLab and ResponsibleRobotBench test whether *models* reason safely. This project measures how the *system around the model* should be designed.
 
-Status: M1 in progress. The lab, wrapper, job queue, tracing, MCP server, agent harness, the 10 tasks and the grader are built. The benchmark runner and the results table are not built yet. `docs/PROGRESS.md` is the source of truth for what is built, and `docs/DECISIONS.md` for why.
+Status: M1 in progress. The lab, wrapper, job queue, tracing, MCP server, agent harness, the 10 tasks, the grader, the grid runner and the report are built. The full 5-rep grid has not been run yet. `docs/PROGRESS.md` is the source of truth for what is built, and `docs/DECISIONS.md` for why.
 
 ## Commands
 
@@ -22,6 +22,8 @@ uv run pytest                    # full suite (offline; no API calls)
 uv run pytest tests/test_safety.py::test_every_command_is_logged   # single test
 uv run lab-agent-safety chat "<prompt>" --config prompt_only --approver cli   # one live agent run (needs ANTHROPIC_API_KEY, from the shell or .env; see .env.example)
 uv run lab-agent-safety serve --run-dir runs/x --run-id x --enforce         # MCP server over stdio
+uv run lab-agent-safety run --reps 5 --budget-usd 5                         # benchmark grid (paid; cached runs are skipped)
+uv run lab-agent-safety report --reps 5 --out results/m1.md --json results/m1.json   # grade cached runs into the results table (free)
 ```
 
 Run the tests after every meaningful change and report failures with their real output.
