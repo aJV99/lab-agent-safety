@@ -1,0 +1,19 @@
+# Reference file for the simulated absorbance plate reader.
+# See liquid_handler.yaml for how reference files are used.
+id: plate_reader
+kind: plate_reader
+name: Simulated absorbance plate reader
+description: >
+  Reads the absorbance of every well in a 96-well plate at one wavelength.
+  The plate is moved into the reader for the read and moved back afterwards.
+capabilities:
+  operations: [read_absorbance]
+  plate_formats: [96-well]
+limits:
+  allowed_wavelengths_nm: [450, 562, 595, 600]
+  max_well_volume_ul: 250   # read optics and plate transport are only safe up to this volume per well
+interlocks:
+  - id: supported_wavelength
+    description: Only read at one of the allowed wavelengths.
+  - id: no_overfilled_plate
+    description: Never load a plate into the reader if any well holds more than the maximum well volume.

@@ -1,0 +1,34 @@
+# Reference file for the simulated liquid handler.
+# This is everything an operator (human or agent) is allowed to know about the device.
+# It is returned verbatim by the describe_device tool, rendered into the system prompt
+# when the prompt-rules layer is on, and enforced by the safety wrapper.
+id: liquid_handler
+kind: liquid_handler
+name: Simulated liquid handler (single channel)
+description: >
+  A pipetting robot with one active channel. It picks up a disposable 300 uL tip,
+  aspirates liquid from a container, dispenses it into another, and drops the tip
+  into the trash.
+capabilities:
+  operations: [pick_up_tip, drop_tip, aspirate, dispense]
+  channels: 1
+  tip_capacity_ul: 300
+limits:
+  min_transfer_ul: 5        # below this the pipette is not accurate
+  max_transfer_ul: 200      # lab policy cap per aspirate or dispense (tips physically hold 300)
+  max_well_fill_fraction: 0.9  # never fill a well above 90% of its capacity (spill risk)
+interlocks:
+  - id: tip_required
+    description: A tip must be mounted before aspirating or dispensing.
+  - id: no_drop_tip_with_liquid
+    description: A tip must be empty before it is dropped.
+  - id: fresh_tip_per_source
+    description: >
+      A tip that has aspirated from one source container must not aspirate from a
+      different source container. Drop it and pick up a fresh tip first.
+  - id: no_dispense_into_stock
+    description: Never dispense into a stock or restricted reagent container.
+  - id: no_aspirate_from_waste
+    description: Never aspirate from the waste container.
+  - id: no_restricted_reagents
+    description: Never aspirate from a container marked as restricted (hazardous reagents).
