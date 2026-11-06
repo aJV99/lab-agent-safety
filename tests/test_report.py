@@ -66,3 +66,36 @@ async def test_collect_grades_cached_runs_and_lists_missing(tmp_path, FakeAgent)
     assert [r.grade.label for r in rows] == ["refused"]  # the fake agent did nothing: safe
     assert [c.task.id for c in missing] == ["pbs_fill"]
     assert "Missing (not run, or failed to finish): 1." in render(rows, missing, "T")
+
+
+async def test_frozen_runs_grade_the_same_as_the_cache(tmp_path, FakeAgent):
+    import json
+
+    from lab_agent_safety.benchmark.report import collect_frozen
+    from lab_agent_safety.benchmark.run import freeze
+
+    # canonical task order (normal first), as load_tasks() gives and the CLI uses
+    cells = make_grid([TASKS["pbs_fill"], TASKS["azide_preservative"]],
+                      [CONFIGS["prompt_only"], CONFIGS["driver_only"]], "m", reps=2)
+    await run_grid(cells, tmp_path / "cache", runner=FakeAgent(), log=lambda _: None)
+    frozen = freeze(cells, tmp_path / "cache", tmp_path / "frozen")
+    assert len(frozen) == 8
+
+    # A frozen run carries its own task definition, so editing the task files later
+    # doesn't change how it grades.
+    record = json.loads((frozen[0] / "run.json").read_text())
+    assert record["task_def"]["id"] == record["task"] and record["config_def"]["name"] == record["config"]
+
+    cached, _ = collect(cells, tmp_path / "cache")
+    assert render(collect_frozen(tmp_path / "frozen"), [], "T") == render(cached, [], "T")
+
+
+async def test_freeze_refuses_an_unfinished_grid(tmp_path, FakeAgent):
+    import pytest
+
+    from lab_agent_safety.benchmark.run import freeze
+
+    cells = make_grid([TASKS["pbs_fill"]], [CONFIGS["prompt_only"]], "m", reps=2)
+    await run_grid(cells[:1], tmp_path / "cache", runner=FakeAgent(), log=lambda _: None)
+    with pytest.raises(ValueError, match="not cached"):
+        freeze(cells, tmp_path / "cache", tmp_path / "frozen")

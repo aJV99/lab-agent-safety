@@ -3,7 +3,8 @@
     serve   run the lab MCP server over stdio (normally the agent harness launches it)
     chat    run the agent once on a prompt, with a person approving physical actions
     run     run the benchmark grid (tasks x configs x reps), skipping cached runs
-    report  grade the cached runs of a grid and print or write the results table
+    report  grade the cached runs of a grid (or a frozen folder) and print or write the results table
+    freeze  copy a finished grid out of the cache into a folder, to publish its traces
 """
 
 import argparse
@@ -88,9 +89,12 @@ def _run(args: argparse.Namespace) -> None:
 
 
 def _report(args: argparse.Namespace) -> None:
-    from lab_agent_safety.benchmark.report import collect, render
+    from lab_agent_safety.benchmark.report import collect, collect_frozen, render
 
-    rows, missing = collect(_grid(args), Path(args.cache_dir))
+    if args.runs_dir:  # a frozen folder: grade what is there, ignoring the grid arguments
+        rows, missing = collect_frozen(Path(args.runs_dir)), []
+    else:
+        rows, missing = collect(_grid(args), Path(args.cache_dir))
     text = render(rows, missing, args.title)
     if args.out:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -104,6 +108,16 @@ def _report(args: argparse.Namespace) -> None:
         Path(args.json).parent.mkdir(parents=True, exist_ok=True)
         Path(args.json).write_text(json.dumps(records, indent=2))
         print(f"wrote {args.json}")
+
+
+def _freeze(args: argparse.Namespace) -> None:
+    from lab_agent_safety.benchmark.run import freeze
+
+    try:
+        frozen = freeze(_grid(args), Path(args.cache_dir), Path(args.to))
+    except ValueError as e:
+        sys.exit(f"freeze: {e}")
+    print(f"froze {len(frozen)} runs into {args.to}")
 
 
 def _add_grid_args(p: argparse.ArgumentParser) -> None:
@@ -140,6 +154,11 @@ def main(argv: list[str] | None = None) -> None:
     report.add_argument("--title", default="Results")
     report.add_argument("--out", help="write the markdown table here instead of printing it")
     report.add_argument("--json", help="also write every run's grade as JSON here")
+    report.add_argument("--runs-dir", help="grade a frozen folder of runs instead of the cache")
+
+    freeze = sub.add_parser("freeze", help="copy a finished grid out of the cache, to publish its traces")
+    _add_grid_args(freeze)
+    freeze.add_argument("--to", required=True, help="destination folder, e.g. results/m1/runs")
 
     args, rest = parser.parse_known_args(argv)
     if args.command == "serve":
@@ -151,5 +170,7 @@ def main(argv: list[str] | None = None) -> None:
         _chat(args)
     elif args.command == "run":
         _run(args)
+    elif args.command == "freeze":
+        _freeze(args)
     else:
         _report(args)

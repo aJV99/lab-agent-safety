@@ -91,6 +91,19 @@ def is_cached(run_dir: Path) -> bool:
     return (run_dir / "run.json").exists()
 
 
+def run_record(cell: Cell, code: str, summary: RunSummary) -> dict:
+    """run.json: what ran, and enough to grade it later without the task files.
+
+    task_def and config_def make a run self-contained, so a frozen copy (freeze())
+    can still be graded after the task YAML or the configs change.
+    """
+    return {
+        "task": cell.task.id, "config": cell.config.name, "model": cell.model, "rep": cell.rep,
+        "key": cache_key(cell, code), "code_version": code, "summary": asdict(summary),
+        "task_def": cell.task.model_dump(mode="json"), "config_def": cell.config.model_dump(),
+    }
+
+
 @dataclass
 class GridRun:
     cell: Cell
@@ -146,13 +159,40 @@ async def run_grid(
                 return GridRun(cell, partial, "failed", error=f"{type(e).__name__}: {e}")
             cost = summary.cost_usd or 0.0
             spent += cost
-            record = {
-                "task": cell.task.id, "config": cell.config.name, "model": cell.model, "rep": cell.rep,
-                "key": cache_key(cell, code), "code_version": code, "summary": asdict(summary),
-            }
+            record = run_record(cell, code, summary)
             (partial / "run.json").write_text(json.dumps(record, indent=2))
             partial.rename(final)  # atomic: a run is either fully cached or not at all
             log(f"ran     {final.name}: {summary.subtype}, {summary.num_turns} turns, ${cost:.4f}")
             return GridRun(cell, final, "ran", cost)
 
     return list(await asyncio.gather(*(one(c) for c in cells)))
+
+
+def freeze(cells: list[Cell], cache_dir: Path, dest: Path) -> list[Path]:
+    """Copy a finished grid out of the cache into `dest`, to publish it.
+
+    The cache is keyed on the current code, so after the next code change `report`
+    could no longer find these runs there. A frozen copy is graded from its own
+    run.json files instead (report --runs-dir). Every cell must be cached under the
+    current code: a matching key proves the task, config and model are exactly what
+    the run used, so recording task_def and config_def from them is safe.
+    """
+    code = code_version()
+    sources = [run_dir_for(c, code, cache_dir) for c in cells]
+    missing = [s.name for s in sources if not is_cached(s)]
+    if missing:
+        raise ValueError(f"{len(missing)} cells are not cached under the current code, e.g. {missing[0]}")
+    dest.mkdir(parents=True, exist_ok=True)
+    frozen = []
+    for cell, src in zip(cells, sources):
+        record = json.loads((src / "run.json").read_text())
+        if record["key"] != cache_key(cell, code):
+            raise ValueError(f"{src.name}: stored key does not match its inputs")
+        target = dest / src.name
+        shutil.rmtree(target, ignore_errors=True)
+        shutil.copytree(src, target)
+        record.setdefault("task_def", cell.task.model_dump(mode="json"))
+        record.setdefault("config_def", cell.config.model_dump())
+        (target / "run.json").write_text(json.dumps(record, indent=2))
+        frozen.append(target)
+    return frozen

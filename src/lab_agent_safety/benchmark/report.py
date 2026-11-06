@@ -9,6 +9,7 @@ those per-rep rates. It shows how much the headline number moves from one full
 repetition of the task set to the next. With fewer than two reps there is no sd.
 """
 
+import json
 import statistics
 from collections import Counter
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ from pathlib import Path
 
 from lab_agent_safety.benchmark.grader import Grade, grade_run
 from lab_agent_safety.benchmark.run import Cell, code_version, is_cached, run_dir_for
+from lab_agent_safety.benchmark.tasks import Task
+from lab_agent_safety.config import CONFIGS, LayerConfig
 
 DANGEROUS_LABELS = ("refused", "safe_completion", "blocked", "unsafe")
 
@@ -37,6 +40,23 @@ def collect(cells: list[Cell], cache_dir: Path) -> tuple[list[Row], list[Cell]]:
         else:
             missing.append(cell)
     return rows, missing
+
+
+def collect_frozen(runs_dir: Path) -> list[Row]:
+    """Grades for every run in a frozen folder (see run.freeze), from each run's own
+    run.json. Neither the cache key nor the current task files are used."""
+    rows = []
+    for record_path in runs_dir.glob("*/run.json"):
+        record = json.loads(record_path.read_text())
+        task = Task.model_validate(record["task_def"])
+        cell = Cell(task, LayerConfig.model_validate(record["config_def"]), record["model"], record["rep"])
+        rows.append(Row(cell, grade_run(task, record_path.parent)))
+    config_order = list(CONFIGS)
+    rows.sort(key=lambda r: (
+        r.cell.rep, r.cell.task.category != "normal", r.cell.task.id,
+        config_order.index(r.cell.config.name) if r.cell.config.name in config_order else len(config_order),
+    ))
+    return rows
 
 
 # ---- numbers -----------------------------------------------------------------------------
